@@ -1,0 +1,138 @@
+version: "3.1"
+
+intents:
+  - greet
+  - goodbye
+  - affirm
+  - deny
+  - mood_great
+  - mood_unhappy
+  - bot_challenge
+  - ask_skin_concern
+  #- skin_concern
+  # - product_recommendation
+  # - ingredient_info
+  - phone
+  # - repeat_phone
+  - fallback
+
+forms:
+  skin_form:
+    required_slots:
+      - skin_type
+      - skin_concern
+
+slots:
+  skin_type:
+    type: text
+    influence_conversation: true
+    mappings:
+      - type: from_text
+        conditions:
+         - active_loop: skin_form
+           requested_slot: skin_type
+  skin_concern:
+    type: text
+    influence_conversation: true
+    mappings:
+      - type: from_text
+        conditions:
+         - active_loop: skin_form
+           requested_slot: skin_concern
+
+# entities:
+#   - skin_problem
+#   - skin_type
+#   - ingredient
+#   - benefits
+#   - products
+#   - number
+
+
+# slots:
+#   phone:
+#     type: text
+#     influence_conversation : true
+#     mappings:
+#       - type: from_entity
+#         entity: number
+
+#   skin_concern:
+#     type: text
+#     influence_conversation : true
+#     mappings:
+#       - type: from_entity
+#         entity: skin_problem
+
+#   skin_type:
+#     type: text
+#     mappings:
+#       - type: from_entity
+#         entity: skin_type
+
+#   ingredient:
+#     type: text
+#     mappings:
+#       - type: from_text
+
+#   # products:
+#   #   type: list
+#   #   mappings:
+#   #     - type: from_intent
+#   #       intent: inform
+#   #       value: "products_list"
+
+
+responses:
+  utter_greet:
+    - text: "Hey beauty! Can i ask you some question about your skin?"
+
+  utter_cheer_up:
+    - text: "Here is something to cheer you up:"
+      image: "https://i.imgur.com/nGF1K8f.jpg"
+
+  utter_instruction:
+    - text: "Please answer questions in one word (for example: skin type = oily , skin concern = hyperpigmentation) !"
+
+  utter_ask_skin_type:
+  - text: "What is your skin type?"
+
+  utter_happy:
+    - text: "Great! Let me know if you need anything else."
+
+  utter_goodbye:
+    - text: "Goodbye! Have a wonderful day."
+
+  utter_iamabot:
+    - text: "I am a bot, here to help you with your skincare concerns."
+
+  utter_ask_skin_concern:
+    - text: "What is your skin concern ? "
+
+  utter_fallback:
+  - text: "I'm having trouble understanding. Can you rephrase or tell me more about your concern?"
+
+  utter_ask_affirmation:
+  - text: "Would you like to continue your skin analysis ?"
+
+  utter_slots_values:
+  - text: I would like to recommend some best products for {skin_concern} and {skin_type} skin 
+
+  utter_ingredient_info:
+    - text: "The ingredient {ingredient} is great for {benefits}. It works well for {skin_types} skin types."
+
+
+actions:
+  #- action_recommend_products
+  # - action_fetch_ingredient_info
+  # - action_say_phone
+  #- action_say_skin_concern
+  # - action_fallback_to_chatgpt
+  - action_fallback_to_gemini
+  - utter_slots_values
+  - action_recommend_products_from_db
+  
+
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true

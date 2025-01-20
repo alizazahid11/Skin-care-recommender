@@ -1,0 +1,5 @@
+.rasa
+__pycache__
+venv/
+.env
+
