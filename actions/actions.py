@@ -68,7 +68,7 @@ class ActionRecommendProducts(Action):
         # Connect to MongoDB
         client = MongoClient(MONGODB_CONNECTION_STRING)
         db = client.get_database('recommendation_system_database')
-        collection = db['products']  # Define the collection here
+        collection = db['products_information']  # Define the collection here
         
         # Get the skin concern from the slot
         skin_concern = tracker.get_slot('skin_concern')  
@@ -87,9 +87,13 @@ class ActionRecommendProducts(Action):
             recommendations = ""
             for index, product in enumerate(matching_products, start=1):
                 recommendations += (
-                    f"{index}. Product: {product['Name']}\n"
+                    f"{index}. Product: {product['Product Name']}\n"
+                    f"   Category: {product['Category']}\n"
+                    f"   Ingredients: {product['Ingredients']}\n"
                     f"   Price: {product['price_in_pkr']} PKR\n"
-                    f"   Benefits: {product['Benefits']}\n\n"
+                    f"   Benefits: {product['Benefit']}\n"
+                    f"   URL: {product['URL']}\n\n"
+                    
                 )
 
             dispatcher.utter_message(
