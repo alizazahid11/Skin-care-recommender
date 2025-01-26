@@ -33,6 +33,7 @@ import google.generativeai as genai
 from google.api_core import exceptions as google_exceptions
 
 from dotenv import load_dotenv 
+from rasa_sdk.events import SlotSet
 
 
 load_dotenv() # [INFO]: load environment variables from .env file
@@ -42,47 +43,105 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 MONGODB_CONNECTION_STRING = os.getenv("MONGODB_CONNECTION_STRING")
 
 
-# class ActionRecommendProducts(Action): # [INFO]: old method (for testing)
-#     def name(self) -> Text:
-#         return "action_recommend_products"
 
-#     def run(self, dispatcher: CollectingDispatcher, tracker: Tracker, domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-#         skin_type = tracker.get_slot("skin_type")
-#         skin_concern = tracker.get_slot("skin_concern")
 
-#         recommendations = self.get_product_recommendations(skin_type, skin_concern) # [INFO]: local function binded to class
+class ActionResetSlots(Action):
+    def name(self) -> str:
+        return "action_reset_slots"
 
-#         dispatcher.utter_message(text=f"Here are some recommended products for {skin_concern}: {recommendations}")
-#         return []
+    def run(self, dispatcher, tracker, domain):
+        # Reset the slots
+        dispatcher.utter_message(text="Your form has been reset.")
+        return [
+            SlotSet("skin_type", None),
+            SlotSet("skin_concern", None)
+        ]
 
-#     def get_product_recommendations(self, skin_type, skin_concern): # [NOTE]: reqs. to be in sync with recommendation system
-#         # Replace with actual logic to fetch recommendations
-#         return "1. Cleanser A, 2. Moisturizer B, 3. Sunscreen C"
+class ActionRetrieveReviews(Action):
+
+    def name(self) -> Text:
+        return "action_retrieve_reviews"
+
+    def run(self, dispatcher: CollectingDispatcher,
+            tracker: Tracker,
+            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
+        
+
+        # Get the product name from the slot
+        product_name = tracker.get_slot("product_name")
+
+        # Skip if product_name is empty
+        if not product_name:
+            return []
+
+
+        # MongoDB connection setup
+        client = MongoClient(MONGODB_CONNECTION_STRING)
+        db = client.get_database('recommendation_system_database')
+        collection = db['reviews']
+
+
+
+        # Query MongoDB for reviews of the given product name
+        reviews = collection.find({"Name": product_name})
+
+        # Collect ReviewText from the reviews
+        review_texts = [review["ReviewText"] for review in reviews]
+
+        if not review_texts:
+            dispatcher.utter_message(text=f"Sorry, I couldn't find any reviews for '{product_name}'.")
+        else:
+            # Format the reviews for user output
+            formatted_reviews = "\n\n".join(review_texts)
+            dispatcher.utter_message(text=f"Here are the reviews for '{product_name}':\n\n{formatted_reviews}")
+
+        return []
+
 
 
 class ActionRecommendProducts(Action):
     def name(self) -> str:
         return "action_recommend_products_from_db"
-    
+
     def run(self, dispatcher, tracker, domain):
         # Connect to MongoDB
         client = MongoClient(MONGODB_CONNECTION_STRING)
         db = client.get_database('recommendation_system_database')
-        collection = db['products_information']  # Define the collection here
-        
-        # Get the skin concern from the slot
-        skin_concern = tracker.get_slot('skin_concern')  
-        if not skin_concern:
-            dispatcher.utter_message(text="Please specify your skin concern so I can recommend the best products.")
+        collection = db['products_information']
+
+        # Get the slots from the tracker
+        skin_concern = tracker.get_slot('skin_concern')
+        skin_type = tracker.get_slot('skin_type')
+        # category = tracker.get_slot('category')  # Category slot
+        # price_range = tracker.get_slot('price_range')  # Price range slot
+
+        if not skin_concern or not skin_type:
+            dispatcher.utter_message(text="Please specify both your skin concern and skin type so I can recommend the best products.")
             return []
-        
+
+        # Handle multiple skin concerns (split by comma or space)
+        skin_concerns = [concern.strip() for concern in skin_concern.split(",")]
+
+        # # Parse the price range if provided
+        # min_price, max_price = None, None
+        # if price_range:
+        #     try:
+        #         min_price, max_price = map(int, price_range.split("-"))
+        #     except ValueError:
+        #         dispatcher.utter_message(text="Invalid price range format. Please use the format 'min-max', e.g., '1000-5000'.")
+        #         return []
+
         # Query MongoDB for matching products
-        matching_products = self.get_matching_products(collection, skin_concern)
-        
+        matching_products = self.get_matching_products(collection, skin_concerns, skin_type, #category, min_price, max_price
+        )
+
         if matching_products:
-            # Sort products by price
-            matching_products.sort(key=lambda x: x['price_in_pkr'])
-            
+            # Analyze common ingredients
+            common_ingredients = self.get_common_ingredients(matching_products)
+
+            # Sort products by rating (descending)
+            matching_products.sort(key=lambda x: x['Product Rating'], reverse=True)
+
             # Create a response message
             recommendations = ""
             for index, product in enumerate(matching_products, start=1):
@@ -92,33 +151,69 @@ class ActionRecommendProducts(Action):
                     f"   Ingredients: {product['Ingredients']}\n"
                     f"   Price: {product['price_in_pkr']} PKR\n"
                     f"   Benefits: {product['Benefit']}\n"
+                    f"   Rating: {product['Product Rating']}⭐\n"
                     f"   URL: {product['URL']}\n\n"
-                    
                 )
 
+            # Construct a message with common ingredients and recommendations
             dispatcher.utter_message(
-                text=f"Here are some best products that can help with your skin problem :\n\n{recommendations}"
+                text=(
+                    f"Based on your skin concerns ({', '.join(skin_concerns)}), these ingredients might help:\n"
+                    f"{', '.join(common_ingredients)}\n\n"
+                    f"Here are some of the best products based on your preferences:\n\n{recommendations}"
+                )
             )
         else:
             dispatcher.utter_message(
-                text="Sorry, I couldn't find any products matching your skin concern."
+                text="Sorry, I couldn't find any products matching your preferences."
             )
-        
+
         return []
-    
-    def get_matching_products(self, collection, skin_concern):
+
+    def get_matching_products(self, collection, skin_concerns, skin_type, #category, min_price, max_price
+                              ):
         """
-        Query the MongoDB collection for products matching the skin concern.
+        Query the MongoDB collection for products matching the criteria.
         """
-        query = {
-            "$or": [
-                {"Benefits": {"$regex": skin_concern, "$options": "i"}},
-                {"Skin Type": {"$regex": skin_concern, "$options": "i"}}
-            ]
-        }
+        # Build query for skin concerns (OR condition)
+        skin_concern_query = {"$or": [{"Benefit": {"$regex": concern, "$options": "i"}} for concern in skin_concerns]}
+
+        # Build query for skin type (Skin Type must match or be 'All')
+        skin_type_query = {"$or": [{"Skin Type": {"$regex": skin_type, "$options": "i"}}, {"Skin Type": "All"}]}
+
+        # Optional filters
+        # category_query = {"Category": {"$regex": category, "$options": "i"}} if category else {}
+        # price_query = {"price_in_pkr": {"$gte": min_price, "$lte": max_price}} if min_price is not None and max_price is not None else {}
+
+        # Combine all queries
+        query = {"$and": [skin_concern_query, skin_type_query]}
+        # if category_query:
+        #     query["$and"].append(category_query)
+        # if price_query:
+        #     query["$and"].append(price_query)
+
+        # Fetch matching products
         products = collection.find(query)
         return list(products)
+    def get_common_ingredients(self, products):
+        """
+        Analyze the ingredients of the matching products to find the most common ones.
+        """
+        from collections import Counter
 
+        # Extract all ingredients from the products
+        all_ingredients = []
+        for product in products:
+            ingredients = product.get("Ingredients")
+            if isinstance(ingredients, str):  # Ensure 'Ingredients' is a string before splitting
+                all_ingredients.extend(ingredients.split(", "))
+
+        # Count the frequency of each ingredient
+        ingredient_counts = Counter(all_ingredients)
+
+        # Return the top 5 most common ingredients
+        common_ingredients = [ingredient for ingredient, _ in ingredient_counts.most_common(5)]
+        return common_ingredients
 
 # class ActionFetchIngredientInfo(Action):
 #     def name(self) -> Text:

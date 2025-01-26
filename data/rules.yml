@@ -1,57 +1,48 @@
 version: "3.1"
 
-rules: # [INFO]: maps & run rule (aka job/task) on 'intent' to perform 'action'
+rules:
 
-- rule: Say goodbye anytime the user says goodbye # [INFO]: overall similar to 'task' in ansible-playbooks.yml & yaml-actions@github  
+- rule: Say goodbye anytime the user says goodbye
   steps:
-  - intent: goodbye
-  - action: utter_goodbye
+    - intent: goodbye
+    - action: utter_goodbye
 
 - rule: Say 'I am a bot' anytime the user challenges
   steps:
-  - intent: bot_challenge
-  - action: utter_iamabot
-
-# - rule: Handle product recommendation
-#   steps:
-#     - intent: product_recommendation
-#     - action: action_recommend_products
-
-# - rule: Handle user affirmation for product recommendations
-#   steps:
-#     - intent: affirm
-#     - action: action_recommend_products
-
-# - rule: Handle ingredient info
-#   steps:
-#     - intent: ingredient_info
-#     - action: action_fetch_ingredient_info
-
-# - rule: Fallback to ChatGPT
-#   steps:
-#     - intent: nlu_fallback
-#     - action: action_fallback_to_chatgpt
+    - intent: bot_challenge
+    - action: utter_iamabot
 
 - rule: Fallback to Gemini
   steps:
     - intent: nlu_fallback
     - action: action_fallback_to_gemini
 
-# - rule: Activate form
-#   steps:
-#   - intent: greet
-#   - action: utter_greet
-#   - action: skin_form
-#   - active_loop: skin_form
-
 - rule: Submit form
   condition:
-  - active_loop: skin_form
+    - active_loop: skin_form
   steps:
-  - action: skin_form
-  - active_loop: null
-  - slot_was_set:
-    - requested_slot: null
-  #- action: utter_submit
-  - action: utter_slots_values
-  - action : action_recommend_products_from_db
+    - action: skin_form
+    - active_loop: null
+    - slot_was_set:
+        - requested_slot: null
+    - action: utter_slots_values
+    - action: action_recommend_products_from_db
+    - action: action_reset_slots
+    - action: utter_ask_another_skin_concern
+    - action: action_listen  # Explicitly wait for user input
+
+- rule: Handle affirmation after fallback
+  steps:
+    - intent: affirm
+    - action: utter_instruction
+    - action: skin_form
+    - active_loop: skin_form
+
+- rule: Handle user affirmations
+  condition:
+    - active_loop: skin_form
+  steps:
+    - intent: affirm
+    - action: utter_instruction
+    - action: skin_form
+    - active_loop: skin_form

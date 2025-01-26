@@ -1,143 +1,81 @@
 version: "3.1"
 
-stories: # [INFO]: connects intents (relationship map), brings context to responses in {rasa shell} [similar to taylorered responses in chatgpt] -> path, simple if-if ladder??
+stories:
 
-# - story: happy path
-#   steps:
-#     - intent: greet
-#     - action: utter_ask_phone
-#     - intent: phone
-#       entities:
-#       - number: 45906543198
-#     - slot_was_set:
-#       - phone: 80021560987
-#     - action: action_say_phone
-
-
-# - story: sad path
-#   steps:
-#     - intent: greet
-#     - action: utter_greet
-#     - intent: mood_unhappy
-#     - action: utter_cheer_up
-#     - action: utter_did_that_help
-#     - intent: deny
-#     - action: utter_goodbye
-
-# - story: greet and then ask skin concern 
-#   steps:
-#     - intent: greet
-#     - action: utter_ask_skin_concern
-#     - intent: skin_concern
-#       entities:
-#       - skin_problem: acne
-#     - slot_was_set:
-#       - skin_concern: acne
-#     - action: action_say_skin_concern
-#     - action: action_recommend_products
-
-
-# - story: happy path (testing)
-#   steps:
-#     - intent: skin_concern
-#       entities:
-#       - skin_problem: acne
-#     - slot_was_set:
-#       - skin_concern: acne
-#     - action: action_say_skin_concern
-#     - action: action_recommend_products
-
-
-# - story: explain ingredient benefits
-#   steps:
-#     - intent: ingredient_info
-#     - action: action_fetch_ingredient_info
-
-
-
-
-
-
-- story: interactive_story_checkpoint
+- story: interactive_greet_and_skin_concern
   steps:
-  - or: 
-    - intent: ask_skin_concern   
-    - intent: greet
-  - action: utter_greet
-  - checkpoint : check_affirmation
+    - or:
+        - intent: greet
+        - intent: ask_skin_concern
+    - action: utter_greet
+    - checkpoint: check_affirmation
 
-
-
-- story: interactive_story_checkpoint_path_1
+- story: user_affirms_skin_concern
   steps:
-  - checkpoint: check_affirmation
-  - intent: affirm
-  - action : utter_instruction
-  - action: skin_form
-  - active_loop: skin_form
-  - slot_was_set:
-    - requested_slot: skin_type
-  - slot_was_set:
-    - skin_type: oily
-  - slot_was_set:
-    - requested_slot: skin_concern
-  - slot_was_set:
-    - skin_concern: acne
-  - slot_was_set:
-    - requested_slot: null
-  - active_loop: null
- # - action: utter_submit ask_skin_concern
-  - action: utter_slots_values
-  - action : action_recommend_products_from_db
+    - checkpoint: check_affirmation
+    - intent: affirm
+    - action: utter_instruction
+    - action: skin_form
+    - active_loop: skin_form
+    - slot_was_set:
+        - requested_slot: skin_type
+    - slot_was_set:
+        - requested_slot: skin_concern
+    - active_loop: null
+    - action: utter_slots_values
+    - action: action_recommend_products_from_db
+    - action: action_reset_slots
+    - action: utter_ask_another_skin_concern
+    - checkpoint : check_user_have_another_skin_concern
 
-
-
-  
-- story: interactive_story_checkpoint_path_2
+- story: user_has_another_skin_concern
   steps:
-  - checkpoint : check_affirmation
-  - intent: deny
-  - action : utter_ask_affirmation
-  - checkpoint : skin_form_checkpoint 
-  
+    - checkpoint: check_user_have_another_skin_concern
+    - intent: affirm
+    - action: utter_instruction
+    - action: skin_form
+    - active_loop: skin_form
+    - slot_was_set:
+        - requested_slot: skin_type
+    - slot_was_set:
+        - requested_slot: skin_concern
+    - active_loop: null
+    - action: utter_slots_values
+    - action: action_recommend_products_from_db
+    - action: action_reset_slots
+    - action: utter_ask_another_skin_concern
 
-
-- story: interactive_story_checkpoint_path_2.1
+- story: user_does_not_have_another_skin_concern
   steps:
-  - checkpoint : skin_form_checkpoint
-  - intent: deny
-  - action : utter_goodbye
+    - checkpoint: check_user_have_another_skin_concern
+    - intent: deny
+    - action: utter_goodbye
 
-
-
-- story: interactive_story_checkpoint_path_2.2
+- story: fallback_and_retry
   steps:
-  - checkpoint : skin_form_checkpoint
-  - intent: affirm
-  - action : utter_instruction
-  - action: skin_form
-  - active_loop: skin_form
-  - slot_was_set:
-    - requested_slot: skin_type
-  - slot_was_set:
-    - skin_type: oily
-  - slot_was_set:
-    - requested_slot: skin_concern
-  - slot_was_set:
-    - skin_concern: acne
-  - slot_was_set:
-    - requested_slot: null
-  - active_loop: null
- # - action: utter_submit ask_skin_concern
-  - action: utter_slots_values
-  - action : action_recommend_products_from_db
+    - intent: nlu_fallback
+    - action: action_fallback_to_gemini
+    - checkpoint: check_affirmation
 
-
-
-- story: Fallback example
+- story: user_affirms_after_fallback
   steps:
-  - intent: nlu_fallback
-  - action: action_fallback_to_gemini
+    - checkpoint: check_affirmation
+    - intent: affirm
+    - action: utter_instruction
+    - action: skin_form
+    - active_loop: skin_form
+    - slot_was_set:
+        - requested_slot: skin_type
+    - slot_was_set:
+        - requested_slot: skin_concern
+    - active_loop: null
+    - action: utter_slots_values
+    - action: action_recommend_products_from_db
+    - action: action_reset_slots
+    - action: utter_ask_another_skin_concern
 
-
-
+- story: user_denies_after_fallback
+  steps:
+    - checkpoint: check_affirmation
+    - intent: deny
+    - action: utter_goodbye

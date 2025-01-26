@@ -106,10 +106,13 @@ nlu: # [INFO]: maps examples on intent keyword
     - here you do [69897896543](number)
     - my phone number is [98754309872](number)
 
-# - intent: repeat_phone
-#   examples: |
-#     - what is my phone number
-#     - tell me my phone number
+- intent: tell_product_name
+  examples: |
+    - [The Ordinary Hyaluronic Acid 2% + B5](product_name)
+    - [Alcohol-Free No Rinse Hydrating Facial Toner for Sensitive & Dry Skin](product_name)
+    - [The Alpha-Arbutin 2 Discoloration Care Serum](product_name)
+    - [CeraVe Makeup Removing Wipes](product_name)
+    - [Hydro Boost Hydrating 100% Hydrogel Mask](product_name)
 
 # - intent: skin_concern
 #   examples: |

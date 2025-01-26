@@ -9,18 +9,25 @@ intents:
   - mood_unhappy
   - bot_challenge
   - ask_skin_concern
-  #- skin_concern
+  - tell_product_name
   # - product_recommendation
   # - ingredient_info
   - phone
   # - repeat_phone
   - fallback
 
+# entities:
+#   - product_name
+
+
 forms:
   skin_form:
     required_slots:
       - skin_type
       - skin_concern
+      # - category
+      # - price_range
+
 
 slots:
   skin_type:
@@ -39,6 +46,30 @@ slots:
         conditions:
          - active_loop: skin_form
            requested_slot: skin_concern
+
+  # category:
+  #   type: text
+  #   influence_conversation: true
+  #   mappings:
+  #     - type: from_text
+  #       conditions:
+  #        - active_loop: skin_form
+  #          requested_slot: category
+  # price_range:
+  #   type: text
+  #   influence_conversation: true
+  #   mappings:
+  #     - type: from_text
+  #       conditions:
+  #        - active_loop: skin_form
+  #          requested_slot: price_range
+  # product_name:
+  #   type: text
+  #   influence_conversation: true
+  #   mappings:
+  #     - type: from_entity
+  #       entity: 
+  #       product_name
 
 # entities:
 #   - skin_problem
@@ -92,7 +123,7 @@ responses:
       image: "https://i.imgur.com/nGF1K8f.jpg"
 
   utter_instruction:
-    - text: "Please answer questions in one word (for example: skin type = oily , skin concern = hyperpigmentation) !"
+    - text: "Please answer questions in one word (for example: skin type = oily , skin concerns = hyperpigmentation,acne,dark spots) !"
 
   utter_ask_skin_type:
   - text: "What is your skin type?"
@@ -110,16 +141,32 @@ responses:
     - text: "What is your skin concern ? "
 
   utter_fallback:
-  - text: "I'm having trouble understanding. Can you rephrase or tell me more about your concern?"
+    - text: "I'm having trouble understanding. Can you rephrase or tell me more about your concern?"
 
+
+
+  utter_ask_another_skin_concern:
+    - text: "Do you have any other skin concern ?"
+
+  utter_ask_about_reviews:
+    - text: "If you want to know reviews of any product please mentions it's name (for example : Conatural Essential Day Cream) otherwise press enter"
+
+  utter_slots_values:
+    - text: I would like to recommend some best products for {skin_concern} and {skin_type} skin 
+
+  utter_ask_category:
+    - text: "If you want products of specific category so mention please (for example : cleanser , mosturizer) otherwise press enter "
+
+  utter_ask_price_range:
+    - text: "If you want products of specific price range so mention please (for example : 1000-5000 , 2500-8000) otherwise press enter "
+
+  
   utter_ask_affirmation:
   - text: "Would you like to continue your skin analysis ?"
 
-  utter_slots_values:
-  - text: I would like to recommend some best products for {skin_concern} and {skin_type} skin 
 
-  utter_ingredient_info:
-    - text: "The ingredient {ingredient} is great for {benefits}. It works well for {skin_types} skin types."
+
+
 
 
 actions:
@@ -131,6 +178,8 @@ actions:
   - action_fallback_to_gemini
   - utter_slots_values
   - action_recommend_products_from_db
+  - action_retrieve_reviews
+  - action_reset_slots
   
 
 session_config:
