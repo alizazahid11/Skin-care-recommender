@@ -109,6 +109,7 @@ responses:
 
 
 actions:
+  # - action_session_start
   - action_fallback_to_gemini
   - utter_slots_values
   - action_recommend_products_from_db

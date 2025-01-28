@@ -2,6 +2,11 @@ version: "3.1"
 
 rules:
 
+
+# - rule: Initiate conversation with greeting
+#   steps:
+#     - action: action_session_start
+
 - rule: Say goodbye anytime the user says goodbye
   steps:
     - intent: goodbye

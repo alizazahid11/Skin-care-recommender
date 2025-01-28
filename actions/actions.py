@@ -27,16 +27,14 @@ from rasa_sdk.executor import CollectingDispatcher
 
 from pymongo import MongoClient
 
-# import openai
-# from openai import OpenAI
 
 import google.generativeai as genai
 from google.api_core import exceptions as google_exceptions
 
 from dotenv import load_dotenv 
-from rasa_sdk.events import SlotSet , EventType
+from rasa_sdk.events import SlotSet , EventType 
 from rasa_sdk.forms import FormValidationAction
-import re
+from rasa_sdk.events import  SessionStarted, ActionExecuted
 
 load_dotenv() # [INFO]: load environment variables from .env file
 
@@ -58,6 +56,23 @@ class ActionResetSlots(Action):
             SlotSet("category", None),
             SlotSet("reviews", None),
         ]
+    
+
+ 
+# class ActionSessionStart(Action):
+#     def name(self) -> Text:
+#         return "action_session_start"
+
+#     async def run(
+#         self, dispatcher, tracker: Tracker, domain: Dict[Text, Any]
+#     ) -> List[Dict[Text, Any]]:
+#         dispatcher.utter_message(response="utter_greet")
+#         # the session should begin with a `session_started` event and an `action_listen`
+#         # as a user message follows
+#         return [SessionStarted(), ActionExecuted("action_listen")]
+
+
+
 class ActionRecommendProducts(Action):
     def name(self) -> str:
         return "action_recommend_products_from_db"
@@ -200,110 +215,6 @@ class ActionRecommendProducts(Action):
         return common_ingredients
 
 
-# class ActionRecommendProducts(Action):
-#     def name(self) -> str:
-#         return "action_recommend_products_from_db"
-
-#     def run(self, dispatcher, tracker, domain):
-#         # Connect to MongoDB
-#         client = MongoClient(MONGODB_CONNECTION_STRING)
-#         db = client.get_database('recommendation_system_database')
-#         collection = db['products_information']
-
-#         # Get the slots from the tracker
-#         skin_concern = tracker.get_slot('skin_concern')
-#         skin_type = tracker.get_slot('skin_type')
-#         category = tracker.get_slot('category')  # New slot for category
-
-
-#         if not skin_concern or not skin_type:
-#             dispatcher.utter_message(text="Please specify both your skin concern and skin type so I can recommend the best products.")
-#             return []
-
-#         # Handle multiple skin concerns (split by comma or space)
-#         skin_concerns = [concern.strip() for concern in skin_concern.split(",")]
-
-#         # Query MongoDB for matching products
-#         matching_products = self.get_matching_products(collection, skin_concerns, skin_type, category)
-
-#         if matching_products:
-#             # Analyze common ingredients
-#             common_ingredients = self.get_common_ingredients(matching_products)
-
-#             # Sort products by rating (descending)
-#             matching_products.sort(key=lambda x: x['Product Rating'], reverse=True)
-
-#             # Create a response message
-#             recommendations = ""
-#             for index, product in enumerate(matching_products, start=1):
-#                 recommendations += (
-#                     f"{index}. Product: {product['Product Name']}\n"
-#                     f"   Category: {product['Category']}\n"
-#                     f"   Ingredients: {product['Ingredients']}\n"
-#                     f"   Price: {product['price_in_pkr']} PKR\n"
-#                     f"   Benefits: {product['Benefit']}\n"
-#                     f"   Rating: {product['Product Rating']}⭐\n"
-#                     f"   URL: {product['URL']}\n\n"
-#                 )
-
-#             # Construct a message with common ingredients and recommendations
-#             dispatcher.utter_message(
-#                 text=(
-#                     f"Based on your skin concerns ({', '.join(skin_concerns)}), these ingredients might help:\n"
-#                     f"{', '.join(common_ingredients)}\n\n"
-#                     f"Here are some of the best products based on your preferences:\n\n{recommendations}"
-#                 )
-#             )
-#         else:
-#             dispatcher.utter_message(
-#                 text="Sorry, I couldn't find any products matching your preferences."
-#             )
-
-#         return []
-
-#     def get_matching_products(self, collection, skin_concerns, skin_type, category):
-#         """
-#         Query the MongoDB collection for products matching the criteria.
-#         """
-#         # Build query for skin concerns (OR condition)
-#         skin_concern_query = {"$or": [{"Benefit": {"$regex": concern, "$options": "i"}} for concern in skin_concerns]}
-
-#         # Build query for skin type (Skin Type must match or be 'All')
-#         skin_type_query = {"$or": [{"Skin Type": {"$regex": skin_type, "$options": "i"}}, {"Skin Type": "All"}]}
-
-#         # Base query combining skin concerns and skin type
-#         query = {"$and": [skin_concern_query, skin_type_query]}
-
-#         # Add category filter if it's not 'no'
-#         if category and category.lower() != "no":
-#             query["$and"].append({"Category": {"$regex": category, "$options": "i"}})
-
-    
-
-#         # Fetch matching products
-#         products = collection.find(query)
-#         return list(products)
-
-#     def get_common_ingredients(self, products):
-#         """
-#         Analyze the ingredients of the matching products to find the most common ones.
-#         """
-#         from collections import Counter
-
-#         # Extract all ingredients from the products
-#         all_ingredients = []
-#         for product in products:
-#             ingredients = product.get("Ingredients")
-#             if isinstance(ingredients, str):  # Ensure 'Ingredients' is a string before splitting
-#                 all_ingredients.extend(ingredients.split(", "))
-
-#         # Count the frequency of each ingredient
-#         ingredient_counts = Counter(all_ingredients)
-
-#         # Return the top 5 most common ingredients
-#         common_ingredients = [ingredient for ingredient, _ in ingredient_counts.most_common(5)]
-#         return common_ingredients
-
 
 class ActionFallbackToGemini(Action):
     def name(self):
@@ -338,52 +249,10 @@ class ActionFallbackToGemini(Action):
             print(f"[Gemini] An API call error occurred: {e}")
 
         except Exception as e:
-            dispatcher.utter_message("An unexpected error occurred.")
+            dispatcher.utter_message("Please give proper input.")
             print(f"[Gemini] Error: {e}")
 
 
-
-
-
-class ActionRetrieveReviews(Action):
-
-    def name(self) -> Text:
-        return "action_retrieve_reviews"
-
-    def run(self, dispatcher: CollectingDispatcher,
-            tracker: Tracker,
-            domain: Dict[Text, Any]) -> List[Dict[Text, Any]]:
-        
-
-        # Get the product name from the slot
-        product_name = tracker.get_slot("product_name")
-
-        # Skip if product_name is empty
-        if not product_name:
-            return []
-
-
-        # MongoDB connection setup
-        client = MongoClient(MONGODB_CONNECTION_STRING)
-        db = client.get_database('recommendation_system_database')
-        collection = db['reviews']
-
-
-
-        # Query MongoDB for reviews of the given product name
-        reviews = collection.find({"Name": product_name})
-
-        # Collect ReviewText from the reviews
-        review_texts = [review["ReviewText"] for review in reviews]
-
-        if not review_texts:
-            dispatcher.utter_message(text=f"Sorry, I couldn't find any reviews for '{product_name}'.")
-        else:
-            # Format the reviews for user output
-            formatted_reviews = "\n\n".join(review_texts)
-            dispatcher.utter_message(text=f"Here are the reviews for '{product_name}':\n\n{formatted_reviews}")
-
-        return []
 
 
 # class ValidateSkinForm(FormValidationAction):
