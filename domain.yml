@@ -10,14 +10,8 @@ intents:
   - bot_challenge
   - ask_skin_concern
   - tell_product_name
-  # - product_recommendation
-  # - ingredient_info
   - phone
-  # - repeat_phone
   - fallback
-
-# entities:
-#   - product_name
 
 
 forms:
@@ -25,8 +19,8 @@ forms:
     required_slots:
       - skin_type
       - skin_concern
-      # - category
-      # - price_range
+      - category
+      - reviews
 
 
 slots:
@@ -47,71 +41,22 @@ slots:
          - active_loop: skin_form
            requested_slot: skin_concern
 
-  # category:
-  #   type: text
-  #   influence_conversation: true
-  #   mappings:
-  #     - type: from_text
-  #       conditions:
-  #        - active_loop: skin_form
-  #          requested_slot: category
-  # price_range:
-  #   type: text
-  #   influence_conversation: true
-  #   mappings:
-  #     - type: from_text
-  #       conditions:
-  #        - active_loop: skin_form
-  #          requested_slot: price_range
-  # product_name:
-  #   type: text
-  #   influence_conversation: true
-  #   mappings:
-  #     - type: from_entity
-  #       entity: 
-  #       product_name
-
-# entities:
-#   - skin_problem
-#   - skin_type
-#   - ingredient
-#   - benefits
-#   - products
-#   - number
-
-
-# slots:
-#   phone:
-#     type: text
-#     influence_conversation : true
-#     mappings:
-#       - type: from_entity
-#         entity: number
-
-#   skin_concern:
-#     type: text
-#     influence_conversation : true
-#     mappings:
-#       - type: from_entity
-#         entity: skin_problem
-
-#   skin_type:
-#     type: text
-#     mappings:
-#       - type: from_entity
-#         entity: skin_type
-
-#   ingredient:
-#     type: text
-#     mappings:
-#       - type: from_text
-
-#   # products:
-#   #   type: list
-#   #   mappings:
-#   #     - type: from_intent
-#   #       intent: inform
-#   #       value: "products_list"
+  category:
+    type: text
+    influence_conversation: true
+    mappings:
+      - type: from_text
+        conditions:
+          - active_loop: skin_form
+            requested_slot: category
+  reviews:
+    type: text
+    influence_conversation: true
+    mappings:
+      - type: from_text
+        conditions:
+          - active_loop: skin_form
+            requested_slot: reviews
 
 
 responses:
@@ -143,8 +88,6 @@ responses:
   utter_fallback:
     - text: "I'm having trouble understanding. Can you rephrase or tell me more about your concern?"
 
-
-
   utter_ask_another_skin_concern:
     - text: "Do you have any other skin concern ?"
 
@@ -154,32 +97,24 @@ responses:
   utter_slots_values:
     - text: I would like to recommend some best products for {skin_concern} and {skin_type} skin 
 
+
   utter_ask_category:
-    - text: "If you want products of specific category so mention please (for example : cleanser , mosturizer) otherwise press enter "
+    - text: "Do you want to filter products by category? If yes, please specify (e.g., moisturizer, cleanser). Otherwise, type 'no'."
 
-  utter_ask_price_range:
-    - text: "If you want products of specific price range so mention please (for example : 1000-5000 , 2500-8000) otherwise press enter "
+  utter_ask_reviews:
+    - text: "Would you like to see reviews for the recommended products? Type 'yes' to see reviews or 'no' to skip."
 
-  
   utter_ask_affirmation:
   - text: "Would you like to continue your skin analysis ?"
 
 
-
-
-
-
 actions:
-  #- action_recommend_products
-  # - action_fetch_ingredient_info
-  # - action_say_phone
-  #- action_say_skin_concern
-  # - action_fallback_to_chatgpt
   - action_fallback_to_gemini
   - utter_slots_values
   - action_recommend_products_from_db
   - action_retrieve_reviews
   - action_reset_slots
+
   
 
 session_config:

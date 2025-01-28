@@ -21,6 +21,10 @@ stories:
         - requested_slot: skin_type
     - slot_was_set:
         - requested_slot: skin_concern
+    - slot_was_set:
+        - requested_slot: category
+    - slot_was_set:
+        - requested_slot: reviews
     - active_loop: null
     - action: utter_slots_values
     - action: action_recommend_products_from_db
@@ -39,6 +43,10 @@ stories:
         - requested_slot: skin_type
     - slot_was_set:
         - requested_slot: skin_concern
+    - slot_was_set:
+        - requested_slot: category
+    - slot_was_set:
+        - requested_slot: reviews
     - active_loop: null
     - action: utter_slots_values
     - action: action_recommend_products_from_db
@@ -68,6 +76,10 @@ stories:
         - requested_slot: skin_type
     - slot_was_set:
         - requested_slot: skin_concern
+    - slot_was_set:
+        - requested_slot: category
+    - slot_was_set:
+        - requested_slot: reviews
     - active_loop: null
     - action: utter_slots_values
     - action: action_recommend_products_from_db
