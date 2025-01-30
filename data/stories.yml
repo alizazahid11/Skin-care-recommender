@@ -24,7 +24,9 @@ stories:
     - slot_was_set:
         - requested_slot: category
     - slot_was_set:
-        - requested_slot: reviews
+        - requested_slot: review_sentiment   
+    - slot_was_set:
+        - requested_slot: sentiment_score
     - active_loop: null
     - action: utter_slots_values
     - action: action_recommend_products_from_db
@@ -46,7 +48,9 @@ stories:
     - slot_was_set:
         - requested_slot: category
     - slot_was_set:
-        - requested_slot: reviews
+        - requested_slot: review_sentiment
+    - slot_was_set:
+        - requested_slot: sentiment_score
     - active_loop: null
     - action: utter_slots_values
     - action: action_recommend_products_from_db
@@ -79,7 +83,9 @@ stories:
     - slot_was_set:
         - requested_slot: category
     - slot_was_set:
-        - requested_slot: reviews
+        - requested_slot: review_sentiment
+    - slot_was_set:
+        - requested_slot: sentiment_score
     - active_loop: null
     - action: utter_slots_values
     - action: action_recommend_products_from_db

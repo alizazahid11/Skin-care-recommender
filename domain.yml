@@ -20,7 +20,8 @@ forms:
       - skin_type
       - skin_concern
       - category
-      - reviews
+      - review_sentiment
+      - sentiment_score
 
 
 slots:
@@ -49,14 +50,27 @@ slots:
         conditions:
           - active_loop: skin_form
             requested_slot: category
-  reviews:
+  review_sentiment:
     type: text
     influence_conversation: true
     mappings:
       - type: from_text
         conditions:
           - active_loop: skin_form
-            requested_slot: reviews
+            requested_slot: review_sentiment
+  sentiment_score:
+    type: text
+    influence_conversation: true
+    mappings:
+      - type: from_text
+        conditions:
+          - active_loop: skin_form
+            requested_slot: sentiment_score
+
+
+
+
+
 
 
 responses:
@@ -91,8 +105,6 @@ responses:
   utter_ask_another_skin_concern:
     - text: "Do you have any other skin concern ?"
 
-  utter_ask_about_reviews:
-    - text: "If you want to know reviews of any product please mentions it's name (for example : Conatural Essential Day Cream) otherwise press enter"
 
   utter_slots_values:
     - text: I would like to recommend some best products for {skin_concern} and {skin_type} skin 
@@ -101,12 +113,16 @@ responses:
   utter_ask_category:
     - text: "Do you want to filter products by category? If yes, please specify (e.g., moisturizer, cleanser). Otherwise, type 'no'."
 
-  utter_ask_reviews:
-    - text: "Would you like to see reviews for the recommended products? Type 'yes' to see reviews or 'no' to skip."
+  
+  utter_ask_sentiment_score:
+    - text: "Want to see how people feel about these products? Type 'yes' or 'no'."
+
 
   utter_ask_affirmation:
   - text: "Would you like to continue your skin analysis ?"
 
+  utter_ask_review_sentiment:
+    - text: "Would you like to see reviews for the recommended products? Choose one or multiple: 'positive', 'negative', 'neutral' . Otherwise, type 'no'"
 
 actions:
   # - action_session_start
@@ -115,6 +131,7 @@ actions:
   - action_recommend_products_from_db
   - action_retrieve_reviews
   - action_reset_slots
+  - validate_skin_form
 
   
 
