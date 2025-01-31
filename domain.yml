@@ -75,17 +75,38 @@ slots:
 
 responses:
   utter_greet:
-    - text: "Hey beauty! Can i ask you some question about your skin?"
+    - text: "Hey beauty 😍!"
+
+  utter_ask_skin_analyze:
+  - text: "Would you like us to analyze your skin and provide personalized recommendations?"
+    buttons:
+      - title: "Yes ✅"
+        payload: "yes"
+      - title: "No ❌"
+        payload: "no"
+
+
 
   utter_cheer_up:
     - text: "Here is something to cheer you up:"
       image: "https://i.imgur.com/nGF1K8f.jpg"
 
-  utter_instruction:
-    - text: "Please answer questions in one word (for example: skin type = oily , skin concerns = hyperpigmentation,acne,dark spots) !"
-
   utter_ask_skin_type:
   - text: "What is your skin type?"
+    buttons:
+      - title: "Oily"
+        payload: "oily"
+      - title: "Dry"
+        payload: "dry"
+      - title: "Combination"
+        payload: "combination"
+      - title: "Sensitive"
+        payload: "sensitive"
+      - title: "Normal"
+        payload: "normal"
+      - title: "Acne prone"
+        payload: "acne prone"
+
 
   utter_happy:
     - text: "Great! Let me know if you need anything else."
@@ -103,7 +124,7 @@ responses:
     - text: "I'm having trouble understanding. Can you rephrase or tell me more about your concern?"
 
   utter_ask_another_skin_concern:
-    - text: "Do you have any other skin concern ?"
+    - text: "Do you have any other skin concern ? Please specify (e.g. hyperpigmentation,acne,dark spots)"
 
 
   utter_slots_values:
@@ -111,19 +132,40 @@ responses:
 
 
   utter_ask_category:
-    - text: "Do you want to filter products by category? If yes, please specify (e.g., moisturizer, cleanser). Otherwise, type 'no'."
+    - text: "Do you want to filter products by category? If yes, please specify (e.g., moisturizer, cleanser)."
+      buttons:
+        - title: "No ❌"
+          payload: "no"
+
+
 
   
   utter_ask_sentiment_score:
     - text: "Want to see how people feel about these products? Type 'yes' or 'no'."
+      buttons:
+        - title: "Yes ✅"
+          payload: "yes"
+        - title: "No ❌"
+          payload: "no"
+
 
 
   utter_ask_affirmation:
   - text: "Would you like to continue your skin analysis ?"
-
+  
   utter_ask_review_sentiment:
-    - text: "Would you like to see reviews for the recommended products? Choose one or multiple: 'positive', 'negative', 'neutral' . Otherwise, type 'no'"
-
+  - text: "Which type of reviews would you like to see? Select one or more, then press 'Done'."
+    buttons:
+      - title: "Positive"
+        payload: "positive"
+      - title: "Negative"
+        payload: "negative"
+      - title: "Neutral"
+        payload: "neutral"
+      - title: "All"
+        payload: "all"
+      - title: "No Reviews"
+        payload: "no"
 actions:
   # - action_session_start
   - action_fallback_to_gemini

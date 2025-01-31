@@ -39,7 +39,6 @@ rules:
 - rule: Handle affirmation after fallback
   steps:
     - intent: affirm
-    - action: utter_instruction
     - action: skin_form
     - active_loop: skin_form
 
@@ -48,6 +47,5 @@ rules:
     - active_loop: skin_form
   steps:
     - intent: affirm
-    - action: utter_instruction
     - action: skin_form
     - active_loop: skin_form

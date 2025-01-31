@@ -8,13 +8,13 @@ stories:
         - intent: greet
         - intent: ask_skin_concern
     - action: utter_greet
+    - action: utter_ask_skin_analyze
     - checkpoint: check_affirmation
 
 - story: user_affirms_skin_concern
   steps:
     - checkpoint: check_affirmation
     - intent: affirm
-    - action: utter_instruction
     - action: skin_form
     - active_loop: skin_form
     - slot_was_set:
@@ -38,7 +38,6 @@ stories:
   steps:
     - checkpoint: check_user_have_another_skin_concern
     - intent: affirm
-    - action: utter_instruction
     - action: skin_form
     - active_loop: skin_form
     - slot_was_set:
@@ -67,13 +66,12 @@ stories:
   steps:
     - intent: nlu_fallback
     - action: action_fallback_to_gemini
-    - checkpoint: check_affirmation
+
 
 - story: user_affirms_after_fallback
   steps:
-    - checkpoint: check_affirmation
+    - checkpoint: check_second_time
     - intent: affirm
-    - action: utter_instruction
     - action: skin_form
     - active_loop: skin_form
     - slot_was_set:
@@ -95,5 +93,13 @@ stories:
 - story: user_denies_after_fallback
   steps:
     - checkpoint: check_affirmation
+    - intent: deny
+    - action:   utter_ask_affirmation
+    - checkpoint: check_second_time
+
+
+- story: user_does_not_want_to_analyze
+  steps:
+    - checkpoint: check_second_time
     - intent: deny
     - action: utter_goodbye

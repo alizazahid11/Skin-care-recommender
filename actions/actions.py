@@ -213,9 +213,9 @@ class ValidateSkinForm(FormValidationAction):
     ) -> Dict[Text, Any]:
         """
         Validate the 'skin_type' slot.
-        Ensures user enters only 'oily', 'dry', 'combination', 'sensitive', 'normal', or 'all'.
+        Ensures user enters only 'oily', 'dry', 'combination', 'sensitive', 'normal', acne prone or 'all'.
         """
-        allowed_skin_types = ["oily", "dry", "combination", "sensitive", "normal", "all"]
+        allowed_skin_types = ["oily", "dry", "combination", "sensitive", "normal", "all" , "acne prone"]
         user_input = slot_value.strip().lower()  # Normalize input
 
         if user_input in allowed_skin_types:
@@ -235,9 +235,9 @@ class ValidateSkinForm(FormValidationAction):
     ) -> Dict[Text, Any]:
         """
         Validate the 'review_sentiment' slot.
-        Ensures user enters only 'positive', 'negative', 'neutral', or 'no'.
+        Ensures user enters only 'positive', 'negative', 'neutral','all' or 'no'.
         """
-        allowed_values = ["positive", "negative", "neutral", "no"]
+        allowed_values = ["positive", "negative", "neutral", "no" , "all"]
         selected_values = [val.strip().lower() for val in slot_value.split(",")]
 
         # Check if user entered 'no' (skip reviews)
@@ -450,7 +450,11 @@ class ActionRecommendProducts(Action):
 
                 # **Fetch and format reviews if the user selected sentiment categories**
                 if review_sentiments and review_sentiments != "no":
-                    selected_sentiments = [s.strip().lower() for s in review_sentiments]
+                    # If "all" is selected, fetch all review types
+                    if "all" in review_sentiments:
+                        selected_sentiments = ["positive", "neutral", "negative"]
+                    else:
+                        selected_sentiments = [s.strip().lower() for s in review_sentiments]
 
                     # Fetch reviews for the product
                     product_reviews = self.get_reviews_for_product(reviews_collection, product["_id"], selected_sentiments)
@@ -569,13 +573,17 @@ class ActionRecommendProducts(Action):
             query["$and"].append({"Category": {"$regex": category, "$options": "i"}})
 
         return list(collection.find(query))
-
+ 
     def get_reviews_for_product(self, reviews_collection, product_id, sentiments):
         """Fetch reviews for a specific product based on sentiment selection."""
-        sentiment_filters = [{"Sentiment": sentiment} for sentiment in sentiments]
-        query = {"$and": [{"product_id": product_id}, {"$or": sentiment_filters}]}
-        return list(reviews_collection.find(query))
-    
+        if "all" in sentiments:
+            # Retrieve all sentiment types
+            return list(reviews_collection.find({"product_id": product_id}))
+        else:
+            sentiment_filters = [{"Sentiment": sentiment} for sentiment in sentiments]
+            query = {"$and": [{"product_id": product_id}, {"$or": sentiment_filters}]}
+            return list(reviews_collection.find(query))
+  
     
     def get_common_ingredients(self, products):
         """Analyze the ingredients of the matching products to find the most common ones."""
