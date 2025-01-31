@@ -7,7 +7,6 @@ stories:
     - or:
         - intent: greet
         - intent: ask_skin_concern
-    - action: utter_greet
     - action: utter_ask_skin_analyze
     - checkpoint: check_affirmation
 
@@ -66,6 +65,9 @@ stories:
   steps:
     - intent: nlu_fallback
     - action: action_fallback_to_gemini
+    - action: utter_ask_skin_analyze
+    - checkpoint : check_affirmation
+
 
 
 - story: user_affirms_after_fallback

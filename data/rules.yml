@@ -21,6 +21,7 @@ rules:
   steps:
     - intent: nlu_fallback
     - action: action_fallback_to_gemini
+    - action: utter_ask_skin_analyze
 
 - rule: Submit form
   condition:

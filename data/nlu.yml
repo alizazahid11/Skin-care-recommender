@@ -106,6 +106,7 @@ nlu: # [INFO]: maps examples on intent keyword
     - Can you help me with my skin?
     - can you recommend me product for my skin 
     - i want to know which product is best for me
+    - i have skin problem
    # # - What should I do for healthy skin?
     # - How do I get rid of acne?
     # - What’s the best treatment for dry skin?

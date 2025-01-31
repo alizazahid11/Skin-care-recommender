@@ -58,148 +58,6 @@ class ActionResetSlots(Action):
             SlotSet("sentiment_score", None),
         ]
 
-# class ActionRecommendProducts(Action):
-#     def name(self) -> str:
-#         return "action_recommend_products_from_db"
-
-#     def run(self, dispatcher, tracker, domain):
-#         # Connect to MongoDB
-#         client = MongoClient(MONGODB_CONNECTION_STRING)
-#         db = client.get_database('final_database')
-#         products_collection = db['products']
-#         reviews_collection = db['reviews']
-
-#         # Get the slots from the tracker
-#         skin_concern = tracker.get_slot('skin_concern')
-#         skin_type = tracker.get_slot('skin_type')
-#         category = tracker.get_slot('category')
-#         reviews_choice = tracker.get_slot('reviews')
-
-#         if not skin_concern or not skin_type:
-#             dispatcher.utter_message(text="Please specify both your skin concern and skin type so I can recommend the best products.")
-#             return []
-
-#         # Handle multiple skin concerns (split by comma or space)
-#         skin_concerns = [concern.strip() for concern in skin_concern.split(",")]
-
-#         # Query MongoDB for matching products
-#         matching_products = self.get_matching_products(products_collection, skin_concerns, skin_type, category)
-
-#         if matching_products:
-#             # Analyze common ingredients
-#             common_ingredients = self.get_common_ingredients(matching_products)
-
-#             # Sort products by rating (descending)
-#             matching_products.sort(key=lambda x: x['Product Rating'], reverse=True)
-
-#             # Create a response message
-#             recommendations = ""
-#             for index, product in enumerate(matching_products, start=1):
-#                 recommendations += (
-#                     f"{index}. Product: {product['Product Name']}\n"
-#                     f"   Category: {product['Category']}\n"
-#                     f"   Ingredients: {product['Ingredients']}\n"
-#                     f"   Price: {product['price_in_pkr']} PKR\n"
-#                     f"   Benefits: {product['Benefit']}\n"
-#                     f"   Rating: {product['Product Rating']}⭐\n"
-#                     f"   URL: {product['URL']}\n"
-#                 )
-
-#                 # If the user wants reviews, fetch reviews
-#                 if reviews_choice and reviews_choice.lower() == "yes":
-#                     product_reviews = self.get_reviews_for_product(reviews_collection, product['Product Name'])
-
-#                     if product_reviews:
-#                         recommendations += "   Reviews:\n"
-#                         for i, review in enumerate(product_reviews[:5], start=1):  # Show max 5 reviews
-#                             roman_index = self.to_roman(i)
-#                             recommendations += f"      {roman_index}. {review['ReviewText']} ({review['Rating']}⭐)\n"
-#                     else:
-#                         recommendations += "   Reviews: No reviews found.\n"
-
-#                 recommendations += "\n"  # Add spacing between products
-
-#             # Send recommendations to the user
-#             dispatcher.utter_message(
-#                 text=(
-#                     f"Based on your skin concerns ({', '.join(skin_concerns)}), these ingredients might help:\n"
-#                     f"{', '.join(common_ingredients)}\n\n"
-#                     f"Here are some of the best products based on your preferences:\n\n{recommendations}"
-#                 )
-#             )
-#         else:
-#             dispatcher.utter_message(
-#                 text="Sorry, I couldn't find any products matching your preferences."
-#             )
-
-#         return []
-
-#     def to_roman(self, number):
-#         """
-#         Convert an integer to a Roman numeral.
-#         """
-#         roman_numerals = [
-#             (1, "I"), (4, "IV"), (5, "V"), (9, "IX"), 
-#             (10, "X"), (40, "XL"), (50, "L"), 
-#             (90, "XC"), (100, "C"), (400, "CD"), 
-#             (500, "D"), (900, "CM"), (1000, "M")
-#         ]
-#         result = ""
-#         for value, numeral in reversed(roman_numerals):
-#             while number >= value:
-#                 result += numeral
-#                 number -= value
-#         return result
-
-#     def get_matching_products(self, collection, skin_concerns, skin_type, category):
-#         """
-#         Query the MongoDB collection for products matching the criteria.
-#         """
-#         # Build query for skin concerns (OR condition)
-#         skin_concern_query = {"$or": [{"Benefit": {"$regex": concern, "$options": "i"}} for concern in skin_concerns]}
-
-#         # Build query for skin type (Skin Type must match or be 'All')
-#         skin_type_query = {"$or": [{"Skin Type": {"$regex": skin_type, "$options": "i"}}, {"Skin Type": "All"}]}
-
-#         # Base query combining skin concerns and skin type
-#         query = {"$and": [skin_concern_query, skin_type_query]}
-
-#         # Add category filter if provided
-#         if category and category.lower() != "no":
-#             query["$and"].append({"Category": {"$regex": category, "$options": "i"}})
-
- 
-#         # Fetch matching products
-#         products = collection.find(query)
-#         return list(products)
-
-#     def get_reviews_for_product(self, reviews_collection, product_name):
-#         """
-#         Fetch reviews for a specific product from the reviews collection.
-#         """
-#         return list(reviews_collection.find({"Product Name": product_name}))
-
-#     def get_common_ingredients(self, products):
-#         """
-#         Analyze the ingredients of the matching products to find the most common ones.
-#         """
-#         from collections import Counter
-
-#         # Extract all ingredients from the products
-#         all_ingredients = []
-#         for product in products:
-#             ingredients = product.get("Ingredients")
-#             if isinstance(ingredients, str):  # Ensure 'Ingredients' is a string before splitting
-#                 all_ingredients.extend(ingredients.split(", "))
-
-#         # Count the frequency of each ingredient
-#         ingredient_counts = Counter(all_ingredients)
-
-#         # Return the top 5 most common ingredients
-#         common_ingredients = [ingredient for ingredient, _ in ingredient_counts.most_common(5)]
-#         return common_ingredients
-
-
 class ValidateSkinForm(FormValidationAction):
     def name(self) -> Text:
         return "validate_skin_form"
@@ -213,18 +71,48 @@ class ValidateSkinForm(FormValidationAction):
     ) -> Dict[Text, Any]:
         """
         Validate the 'skin_type' slot.
-        Ensures user enters only 'oily', 'dry', 'combination', 'sensitive', 'normal', acne prone or 'all'.
+        Ensures the user enters a valid skin type from the provided list.
         """
-        allowed_skin_types = ["oily", "dry", "combination", "sensitive", "normal", "all" , "acne prone"]
-        user_input = slot_value.strip().lower()  # Normalize input
 
-        if user_input in allowed_skin_types:
-            return {"skin_type": user_input}
+        # ✅ Full list of allowed skin types from your data
+        allowed_skin_types = {
+            "oily", "dry", "combination", "sensitive", "normal", "all", "acne prone",
+            "acne-prone", "acne prone/blemish", "acne prone, blemish", "acne prone/oily",
+            "acne-prone/inflammed/irritated", "aged/all", "aging", "aging/all", "aging/uneven",
+            "balanced/dry", "balanced/oily", "bumpy", "bumpy/dry", "combination/all",
+            "combination/sensitive/normal", "combination/oily", "damaged",
+            "damaged/dullrough/dehydrated/irritated", "dehydrated/acne prone/pigmented",
+            "dehydrated/dry/all", "dry/sensitive", "dry/aging", "dry/all",
+            "dry/damaged skin", "dry/dehydrated/damaged", "dry/flaky",
+            "dry/itchy", "dry/oily/sensitive", "dry/rough", "dry/rough lips",
+            "dry/uneven", "dry/very dry", "dull/aging", "dull/dry",
+            "dull/uneven/aging", "flared/irritated skin", "hair/all",
+            "healthy/aging", "inflammed/acne prone/fungal", "inflammed/all",
+            "mature/aging", "normal/dry", "normal/dry/sensitive", "normal/extra dry",
+            "normal/oily", "normal/sensitive", "oily/acne prone", "oily/acne prone/bumpy",
+            "oily/acne prone/dull", "oily/combination", "oily/combination/acne prone",
+            "oily/combination/textured", "oily/sensitive", "rough/bumpy",
+            "rough/dry", "rough/oily", "sensitive skin", "sensitive/dry",
+            "sensitive/acne prone", "sensitive/all", "uneven/dull/tanned",
+            "very dry", "clogged/oily/acne prone"
+        }
+
+        # ✅ Normalize input: Convert to lowercase, remove extra spaces
+        normalized_input = slot_value.lower().strip()
+
+        # ✅ Replace variations: Convert `/` and `,` into spaces for better matching
+        normalized_input = normalized_input.replace("/", " ").replace(",", " ")
+
+        # ✅ Final Check: See if the normalized input matches an allowed type
+        if normalized_input in allowed_skin_types:
+            return {"skin_type": normalized_input}  # ✅ Valid skin type
+
         else:
             dispatcher.utter_message(
-                text=f"Invalid skin type. Please enter one of the following: {', '.join(allowed_skin_types)}."
+                text=f"Invalid skin type. Please enter one of the following: {', '.join(sorted(allowed_skin_types))}."
             )
-            return {"skin_type": None}  # Re-ask the question
+            return {"skin_type": None}  # ❌ Re-ask for valid input
+        
 
     def validate_review_sentiment(
         self,
@@ -256,143 +144,6 @@ class ValidateSkinForm(FormValidationAction):
             return {"review_sentiment": None}  # Re-ask for valid input
 
 
-
-# class ActionRecommendProducts(Action):
-#     def name(self) -> str:
-#         return "action_recommend_products_from_db"
-
-#     def run(self, dispatcher, tracker, domain):
-#         # Connect to MongoDB
-#         client = MongoClient(MONGODB_CONNECTION_STRING)
-#         db = client.get_database('final_database')
-#         products_collection = db['products']
-#         reviews_collection = db['reviews']
-
-#         # Get slots from tracker
-#         skin_concern = tracker.get_slot('skin_concern')
-#         skin_type = tracker.get_slot('skin_type')
-#         category = tracker.get_slot('category')
-#         review_sentiments = tracker.get_slot('review_sentiment')
-
-#         if not skin_concern or not skin_type:
-#             dispatcher.utter_message(text="Please specify both your skin concern and skin type so I can recommend the best products.")
-#             return []
-
-#         # Handle multiple skin concerns
-#         skin_concerns = [concern.strip() for concern in skin_concern.split(",")]
-
-#         # Query MongoDB for matching products
-#         matching_products = self.get_matching_products(products_collection, skin_concerns, skin_type, category)
-
-#         if matching_products:
-#             # Analyze common ingredients
-#             common_ingredients = self.get_common_ingredients(matching_products)
-
-#             # Sort products by rating (descending)
-#             matching_products.sort(key=lambda x: x['Product Rating'], reverse=True)
-
-#             # Create a response message
-#             recommendations = ""
-#             for index, product in enumerate(matching_products, start=1):
-#                 recommendations += (
-#                     f"{index}. Product: {product['Product Name']}\n"
-#                     f"   Category: {product['Category']}\n"
-#                     f"   Ingredients: {product['Ingredients']}\n"
-#                     f"   Price: {product['price_in_pkr']} PKR\n"
-#                     f"   Benefits: {product['Benefit']}\n"
-#                     f"   Rating: {product['Product Rating']}⭐\n"
-#                     f"   URL: {product['URL']}\n"
-#                 )
-
-#                 # Fetch and format reviews if the user selected sentiment categories
-#                 if review_sentiments and review_sentiments != "no":
-#                     selected_sentiments = [s.strip().lower() for s in review_sentiments]
-
-#                     # Fetch reviews for the product
-#                     product_reviews = self.get_reviews_for_product(reviews_collection, product['_id'], selected_sentiments)
-
-#                     if product_reviews:
-#                         recommendations += "\n"
-
-#                         # Organizing reviews by sentiment category
-#                         grouped_reviews = {"positive": [], "neutral": [], "negative": []}
-#                         for review in product_reviews:
-#                             sentiment = review["Sentiment"].lower()
-#                             if sentiment in grouped_reviews:
-#                                 grouped_reviews[sentiment].append(review)
-
-#                         # Add reviews to response in categorized manner
-#                         for sentiment, reviews in grouped_reviews.items():
-#                             if reviews:
-#                                 sentiment_title = sentiment.capitalize()  # E.g., "Positive", "Neutral", "Negative"
-#                                 recommendations += f"      {sentiment_title} Reviews:\n"
-#                                 for i, review in enumerate(reviews[:5], start=1):  # Show max 5 reviews per category
-#                                     roman_index = self.to_roman(i)
-#                                     recommendations += f"         {roman_index}. {review['ReviewText']} ({review['Rating']}⭐)\n"
-
-#                     else:
-#                         recommendations += "   Reviews: No matching reviews found.\n"
-
-#                 recommendations += "\n"  # Add spacing between products
-
-#             # Send recommendations to the user
-#             dispatcher.utter_message(
-#                 text=(
-#                     f"Based on your skin concerns ({', '.join(skin_concerns)}), these ingredients might help:\n"
-#                     f"{', '.join(common_ingredients)}\n\n"
-#                     f"Here are some of the best products based on your preferences:\n\n{recommendations}"
-#                 )
-#             )
-#         else:
-#             dispatcher.utter_message(
-#                 text="Sorry, I couldn't find any products matching your preferences."
-#             )
-
-#         return []
-
-#     def to_roman(self, number):
-#         """Convert an integer to a Roman numeral."""
-#         roman_numerals = [
-#             (1, "I"), (4, "IV"), (5, "V"), (9, "IX"), 
-#             (10, "X"), (40, "XL"), (50, "L"), 
-#             (90, "XC"), (100, "C"), (400, "CD"), 
-#             (500, "D"), (900, "CM"), (1000, "M")
-#         ]
-#         result = ""
-#         for value, numeral in reversed(roman_numerals):
-#             while number >= value:
-#                 result += numeral
-#                 number -= value
-#         return result
-
-#     def get_matching_products(self, collection, skin_concerns, skin_type, category):
-#         """Query MongoDB for products matching the criteria."""
-#         skin_concern_query = {"$or": [{"Benefit": {"$regex": concern, "$options": "i"}} for concern in skin_concerns]}
-#         skin_type_query = {"$or": [{"Skin Type": {"$regex": skin_type, "$options": "i"}}, {"Skin Type": "All"}]}
-#         query = {"$and": [skin_concern_query, skin_type_query]}
-
-#         if category and category.lower() != "no":
-#             query["$and"].append({"Category": {"$regex": category, "$options": "i"}})
-
-#         return list(collection.find(query))
-
-#     def get_reviews_for_product(self, reviews_collection, product_id, sentiments):
-#         """Fetch reviews for a specific product based on sentiment selection."""
-#         sentiment_filters = [{"Sentiment": sentiment} for sentiment in sentiments]
-#         query = {"$and": [{"product_id": product_id}, {"$or": sentiment_filters}]}
-#         return list(reviews_collection.find(query))
-
-#     def get_common_ingredients(self, products):
-#         """Analyze the ingredients of the matching products to find the most common ones."""
-#         from collections import Counter
-#         all_ingredients = []
-#         for product in products:
-#             ingredients = product.get("Ingredients")
-#             if isinstance(ingredients, str):
-#                 all_ingredients.extend(ingredients.split(", "))
-
-#         ingredient_counts = Counter(all_ingredients)
-#         return [ingredient for ingredient, _ in ingredient_counts.most_common(5)]
 
 
 class ActionRecommendProducts(Action):
@@ -440,7 +191,7 @@ class ActionRecommendProducts(Action):
                     f"   Price: {product['price_in_pkr']} PKR\n"
                     f"   Benefits: {product['Benefit']}\n"
                     f"   Rating: {product['Product Rating']}⭐\n"
-                    f"   URL: {product['URL']}\n"
+                  
                 )
 
                 # **Sentiment Analysis for the Product**

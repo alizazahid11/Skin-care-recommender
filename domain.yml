@@ -118,13 +118,13 @@ responses:
     - text: "I am a bot, here to help you with your skincare concerns."
 
   utter_ask_skin_concern:
-    - text: "What is your skin concern ? "
+    - text: "What is your skin concern ? Please specify (e.g. hyperpigmentation,acne,dark spots)"
 
   utter_fallback:
     - text: "I'm having trouble understanding. Can you rephrase or tell me more about your concern?"
 
   utter_ask_another_skin_concern:
-    - text: "Do you have any other skin concern ? Please specify (e.g. hyperpigmentation,acne,dark spots)"
+    - text: "Do you have any other skin concern ? "
 
 
   utter_slots_values:
