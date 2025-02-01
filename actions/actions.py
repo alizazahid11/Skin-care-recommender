@@ -49,7 +49,7 @@ class ActionResetSlots(Action):
 
     def run(self, dispatcher, tracker, domain):
         # Reset the slots
-        dispatcher.utter_message(text="Reset.")
+        #dispatcher.utter_message(text="Reset.")
         return [
             SlotSet("skin_type", None),
             SlotSet("skin_concern", None),
