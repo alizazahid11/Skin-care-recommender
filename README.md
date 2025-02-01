@@ -139,11 +139,11 @@ python app.py
 ---
 
 ## **Contributors**
-- **Member 1:** Developed BERT model, Web Scraping, Assisted in LSTM model development.
-- **Member 2:** Developed Few-Shot Learning with Gemini API, Web Scraping, Built Sentiment Analysis API, Set up Database.
-- **Member 3:** Developed Chatbot.
-- **Member 4:** Developed LSTM Model, Frontend (Product Comparison, Home, About Us, UI setup for Recommendation Page), Assisted in Backend.
-- **Member 5:** Backend (Chatbot integration), Frontend (Product Recommendation Page Development).
+- **Ramsha Tariq:** Developed BERT model, Web Scraping, Assisted in LSTM model development.
+- **Farzeen Shahid:** Developed Few-Shot Learning with Gemini API, Web Scraping, Built Sentiment Analysis API, Set up Database.
+- **Syeda Afia Naeem:** Developed Chatbot.
+- **Urooj Khalid:** Developed LSTM Model, Frontend (Product Comparison, Home, About Us, UI setup for Recommendation Page), Assisted in Backend.
+- **Aliza Zahid:** Backend (Chatbot integration), Frontend (Product Recommendation Page Development).
 
 ---
 
